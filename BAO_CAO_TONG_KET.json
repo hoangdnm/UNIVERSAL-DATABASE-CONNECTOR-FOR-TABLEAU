@@ -1,0 +1,44 @@
+{
+  "thong_tin_du_an": {
+    "ten_du_an": "Tableau Universal Database Connector",
+    "mo_ta": "Kết nối Tableau với bất kỳ database nào một cách linh hoạt",
+    "ngay_tao_bao_cao": "2025-08-05 01:59:07",
+    "phien_ban": "2.0.0",
+    "trang_thai": "Hoàn thành và đã kiểm thử"
+  },
+  "tinh_nang_chinh": [
+    "✅ Universal Database Connector - Kết nối với mọi loại database",
+    "✅ Auto Schema Detection - Tự động phát hiện cấu trúc bảng",
+    "✅ Dynamic Table Selection - Chọn bảng động từ giao diện",
+    "✅ Flexible WHERE Clause - Lọc dữ liệu tùy chỉnh",
+    "✅ Real-time Data Updates - Cập nhật dữ liệu realtime",
+    "✅ Multi-database Support - Hỗ trợ nhiều database cùng lúc",
+    "✅ Tableau Web Data Connector - Tích hợp hoàn toàn với Tableau",
+    "✅ RESTful API Architecture - Kiến trúc API hiện đại"
+  ],
+  "cong_nghe_su_dung": [
+    "🐍 Python 3.12 - Backend development",
+    "🌐 Flask Framework - Web API server",
+    "🗄️ SQL Server - Database management",
+    "📊 Tableau - Data visualization",
+    "🔧 pymssql - SQL Server connector",
+    "🎨 HTML/CSS/JavaScript - Frontend interface",
+    "🧪 Python unittest - Testing framework",
+    "📝 JSON - Configuration management"
+  ],
+  "cau_truc_file": {
+    "src/": "Mã nguồn chính",
+    "config/": "Cấu hình database và Docker",
+    "scripts/": "Scripts tiện ích và demo",
+    "tests/": "Bộ kiểm thử tự động",
+    "env/": "Python virtual environment",
+    ".github/": "GitHub configuration và instructions"
+  },
+  "thong_ke_files": {
+    "python_files": 728,
+    "bat_files": 4,
+    "json_files": 1,
+    "md_files": 7,
+    "total_files": 740
+  }
+}

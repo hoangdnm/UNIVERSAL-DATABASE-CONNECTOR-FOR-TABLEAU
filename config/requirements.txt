@@ -1,0 +1,10 @@
+# Danh sách các thư viện cần thiết cho Web Data Connector
+# Chạy lệnh: pip install -r requirements.txt
+
+Flask==2.3.3
+requests==2.31.0
+Werkzeug==2.3.7
+
+# Thư viện kết nối SQL Server
+pyodbc==5.0.1
+pymssql==2.2.8

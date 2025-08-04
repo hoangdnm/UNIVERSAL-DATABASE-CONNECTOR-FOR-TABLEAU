@@ -1,0 +1,31 @@
+---
+applyTo: '**'
+---
+- đọc lại toàn bộ dự án trước khi thực hiện bất kỳ thay đổi nào.
+- chỉ có chấp nhận trao đổi bằng tiếng Việt.
+- không chấp nhận trao đổi bằng tiếng Anh.
+- toàn bộ dự án bắt buộc sử dụng ngôn ngữ python.
+- tôi là học sinh mới bắt đầu học lập trình.
+- tôi cần hướng dẫn từng bước một.
+- tôi cần giải thích rõ ràng về từng đoạn mã.
+- luôn chạy kiểm thử trước khi commit.
+- nếu kiểm thử không thành công thì không được commit.
+- Luôn viết code rõ ràng, dễ hiểu.
+- Sử dụng tên biến, hàm, lớp rõ ràng và có ý nghĩa.
+- Luôn luôn sử dụng Tiếng Việt trong code, bao gồm cả tên biến, hàm và chú thích.
+- Tránh sử dụng các từ viết tắt khó hiểu.
+- Luôn trả lời bằng Tiếng Việt.
+- không được thay đổi code chính dưới bất kỳ hình thức nào.
+- Không sử dụng các thư viện hoặc framework không cần thiết.
+- luôn sử dụng ngôn ngữ python cho dự án này.
+- trong quá trình chạy kiểm thử không được thay đổi code chính khi chưa đc phép.
+- phải commit đánh dấu những phần code đã thay đổi.
+- cách commit luôn sử dụng tiếng việt.
+- không được sử dụng các thư viện hoặc framework không cần thiết.
+- luôn đọc lại code đã viết để hiểu rõ trước khi thực hiện bất kỳ thay đổi nào.
+- Luôn đọc toàn bộ dự án trước khi thực hiện bất kỳ thay đổi nào.
+- Không dùng  && trong terminal,powershell hãy chia thành nhiều dòng lệnh riêng biệt.
+- Thay vì tạo terminal mới thì sử dụng lệnh cls hoăc clear để làm sạch terminal hiện tại.
+- Không sử dụng các ký tự đặc biệt trong tên file, thư mục.
+- không đc xóa files .github dưới bất kỳ hình thức nào.
+-

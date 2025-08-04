@@ -1,0 +1,17 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server
+    environment:
+      SA_PASSWORD: "YourStrong!Pass123"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_ENCRYPT: "false"  # Tắt mã hóa SSL cho môi trường phát triển
+      MSSQL_TRUST_SERVER_CERTIFICATE: "true"  # Tin tưởng certificate
+    ports:
+      - "1235:1433"  # Host port 1235 → Container port 1433
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+volumes:
+  mssql_data:
