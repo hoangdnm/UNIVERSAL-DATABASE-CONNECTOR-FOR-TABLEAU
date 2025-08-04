@@ -5,7 +5,7 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-Compatible-red.svg)](https://www.microsoft.com/sql-server)
 [![Tableau](https://img.shields.io/badge/Tableau-WDC-orange.svg)](https://tableau.com)
 
-**Dự án tốt nghiệp**: Hệ thống kết nối Tableau với bất kỳ database nào một cách linh hoạt và tự động.
+**Dự án đầu tay**: Hệ thống kết nối Tableau với bất kỳ database nào một cách linh hoạt và tự động.
 
 ## 🎯 Mô tả dự án
 
@@ -202,3 +202,4 @@ Dự án này được phát triển cho mục đích học tập và nghiên c�
 ---
 
 **🌟 Cảm ơn bạn đã quan tâm đến dự án! Star ⭐ nếu thấy hữu ích!**
+**Dự án còn đang gia đoạn chạy thử do non kinh nghiệm nếu gặp vấn đề hay góp ý mọi người có thể liên hệ Email: [daongocminhhoang20032004@gmail.com](mailto:daongocminhhoang20032004@gmail.com)**
