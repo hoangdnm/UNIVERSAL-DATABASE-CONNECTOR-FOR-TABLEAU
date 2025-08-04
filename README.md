@@ -183,16 +183,16 @@ curl "http://127.0.0.1:5002/api/data?table=crypto_data&where=price > 50000&limit
 - **📝 Python files**: 15+ files
 - **🧪 Test coverage**: 95%+
 - **⚡ API response time**: < 200ms
-- **💾 Database support**: SQL Server, MySQL, PostgreSQL
+- **💾 Database support**: SQL Server, MySQL, PostgreSQL tự build lại files docker compose nha
 - **🎯 Tableau compatibility**: 100%
 
 ## 📞 Liên hệ
 
-**Dự án tốt nghiệp** - Tableau Universal Database Connector
+**Dự án** - Tableau Universal Database Connector
 
-- 🎓 **Sinh viên**: [Tên sinh viên]
-- 🏫 **Trường**: [Tên trường]
-- 📧 **Email**: [email@example.com]
+- 🎓 **Sinh viên**: [Đào Ngọc Minh Hoàng]
+- 🏫 **Trường**: [FPT polytechnic]
+- 📧 **Email**: [daongocminhhoang20032004@gmail.com]
 - 📅 **Năm**: 2024-2025
 
 ## 📄 License
