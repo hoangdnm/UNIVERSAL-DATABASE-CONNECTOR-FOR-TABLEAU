@@ -33,6 +33,7 @@ Tableau Universal Database Connector là giải pháp linh hoạt cho phép Tabl
 | **HTML/CSS/JS** | - | Frontend interface |
 
 ## 🚀 Cách cài đặt
+## Nhớ cài wsl và docker nhé không là méo chạy đâu :))
 
 ### 1. Clone repository
 ```bash
