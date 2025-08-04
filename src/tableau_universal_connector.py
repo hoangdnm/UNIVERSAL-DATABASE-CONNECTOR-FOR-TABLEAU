@@ -11,6 +11,7 @@ from flask import Flask, render_template_string, jsonify, request
 from datetime import datetime
 import json
 import os
+import pymssql
 
 app = Flask(__name__)
 
@@ -39,7 +40,6 @@ def lay_danh_sach_database():
     config = doc_cau_hinh_database()
     
     try:
-        import pymssql
         ket_noi = pymssql.connect(
             server=config['server'],
             port=config['port'],
@@ -68,7 +68,6 @@ def lay_danh_sach_bang(database_name=None):
         config['database'] = database_name
     
     try:
-        import pymssql
         ket_noi = pymssql.connect(
             server=config['server'],
             port=config['port'],
@@ -115,7 +114,6 @@ def tu_dong_phat_hien_schema(ten_bang, database_name=None):
         config['database'] = database_name
     
     try:
-        import pymssql
         ket_noi = pymssql.connect(
             server=config['server'],
             port=config['port'],
@@ -378,27 +376,45 @@ TABLEAU_WDC_TEMPLATE = '''
             });
             
             function loadDatabaseInfo() {
+                console.log('🔄 Đang tải thông tin database...');
                 fetch('/api/database-info')
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('📡 Database info response status:', response.status);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('📊 Database info response:', data);
                         if (data.success) {
                             document.getElementById('databaseInfo').innerHTML = 
                                 `<strong>Server:</strong> ${data.server}:${data.port}<br>
                                  <strong>Database hiện tại:</strong> ${data.database}<br>
                                  <strong>Số bảng:</strong> ${data.table_count} bảng`;
+                        } else {
+                            document.getElementById('databaseInfo').innerHTML = 
+                                `<span style="color: red;">Lỗi: ${data.error || 'Không thể tải thông tin database'}</span>`;
                         }
                     })
-                    .catch(error => console.error('Error loading database info:', error));
+                    .catch(error => {
+                        console.error('❌ Error loading database info:', error);
+                        document.getElementById('databaseInfo').innerHTML = 
+                            `<span style="color: red;">Lỗi kết nối: ${error.message}</span>`;
+                    });
             }
             
             function loadDatabaseList() {
+                console.log('🔄 Đang tải danh sách database...');
                 fetch('/api/databases')
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('📡 Response status:', response.status);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('📊 Database API response:', data);
                         var databaseSelect = document.getElementById('databaseSelect');
                         databaseSelect.innerHTML = '';
                         
-                        if (data.success && data.databases.length > 0) {
+                        if (data.success && data.databases && data.databases.length > 0) {
+                            console.log('✅ Tìm thấy', data.databases.length, 'database(s)');
                             // Thêm option mặc định
                             var defaultOption = document.createElement('option');
                             defaultOption.value = '';
@@ -410,43 +426,54 @@ TABLEAU_WDC_TEMPLATE = '''
                                 option.value = database;
                                 option.textContent = database;
                                 databaseSelect.appendChild(option);
+                                console.log('➕ Đã thêm database:', database);
                             });
                         } else {
+                            console.log('❌ Không tìm thấy database hoặc lỗi:', data);
                             var option = document.createElement('option');
-                            option.textContent = 'Không tìm thấy database nào';
+                            option.textContent = data.success ? 'Không tìm thấy database nào' : ('Lỗi: ' + (data.error || 'Unknown error'));
                             databaseSelect.appendChild(option);
                         }
                     })
                     .catch(error => {
-                        console.error('Error loading databases:', error);
+                        console.error('❌ Error loading databases:', error);
                         document.getElementById('databaseSelect').innerHTML = '<option>Lỗi tải danh sách database</option>';
                     });
             }
             
             function loadTableList(database) {
+                console.log('🔄 Đang tải danh sách bảng cho database:', database);
                 var apiUrl = database ? `/api/tables?database=${encodeURIComponent(database)}` : '/api/tables';
+                console.log('📡 API URL:', apiUrl);
                 
                 fetch(apiUrl)
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('📡 Tables response status:', response.status);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('📊 Tables API response:', data);
                         var tableSelect = document.getElementById('tableSelect');
                         tableSelect.innerHTML = '';
                         
-                        if (data.success && data.tables.length > 0) {
+                        if (data.success && data.tables && data.tables.length > 0) {
+                            console.log('✅ Tìm thấy', data.tables.length, 'bảng');
                             data.tables.forEach(table => {
                                 var option = document.createElement('option');
                                 option.value = table;
                                 option.textContent = table;
                                 tableSelect.appendChild(option);
+                                console.log('➕ Đã thêm bảng:', table);
                             });
                         } else {
+                            console.log('❌ Không tìm thấy bảng hoặc lỗi:', data);
                             var option = document.createElement('option');
-                            option.textContent = 'Không tìm thấy bảng nào';
+                            option.textContent = data.success ? 'Không tìm thấy bảng nào' : ('Lỗi: ' + (data.error || 'Unknown error'));
                             tableSelect.appendChild(option);
                         }
                     })
                     .catch(error => {
-                        console.error('Error loading tables:', error);
+                        console.error('❌ Error loading tables:', error);
                         document.getElementById('tableSelect').innerHTML = '<option>Lỗi tải danh sách bảng</option>';
                     });
             }
@@ -674,7 +701,6 @@ def get_table_data(table_name):
         order = request.args.get('order', 'auto')
         where_clause = request.args.get('where', '')
         
-        import pymssql
         ket_noi = pymssql.connect(
             server=config['server'],
             port=config['port'],

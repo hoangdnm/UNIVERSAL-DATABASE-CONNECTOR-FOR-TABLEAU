@@ -3,10 +3,19 @@ chcp 65001 >nul
 echo 🔧 KIỂM TRA MÔI TRƯỜNG DỰ ÁN
 echo ==========================================
 
-REM Lưu thư mục hiện tại
-set "PROJECT_DIR=%~dp0"
+REM Lưu thư mục hiện tại và di chuyển về thư mục dự án
+set "PROJECT_DIR=%~dp0\.."
 cd /d "%PROJECT_DIR%"
-echo 📁 Thư mục dự án: %PROJECT_DIR%
+echo 📁 Thư mục dự án: %CD%
+
+REM Kiểm tra xem có đúng thư mục dự án không
+if not exist "src\tableau_universal_connector.py" (
+    echo ❌ Không tìm thấy file src\tableau_universal_connector.py
+    echo 📁 Thư mục hiện tại: %CD%
+    echo 💡 Đảm bảo bạn đang ở đúng thư mục dự án
+    pause
+    exit /b 1
+)
 
 echo.
 echo 📋 KIỂM TRA CÁC THÀNH PHẦN QUAN TRỌNG:

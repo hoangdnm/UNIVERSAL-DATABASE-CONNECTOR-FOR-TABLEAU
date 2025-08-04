@@ -102,7 +102,26 @@ test_ind/
 │   ├── cau_hinh_database.py
 │   ├── demo_universal.py
 │   ├── khoi_tao_database.py
+│   ├── kiem_tra_ket_noi_sql.py
+│   ├── tao_database_test.py
 │   ├── tao_bao_cao_tong_ket.py
+│   ├── tao_du_lieu_1k.py
+│   └── test_env.bat               # Test virtual environment
+├── 📂 batch_scripts/                # Batch files (.bat)
+│   ├── start_simple.bat           # Quick start (recommended)
+│   ├── chay_universal_connector.bat # Full start script
+│   ├── kiem_tra_moi_truong.bat    # Environment check
+│   └── README.md                   # Batch scripts guide
+├── 📂 tests/                        # Kiểm thử
+│   ├── demo_hoan_chinh.py
+│   ├── kiem_thu_du_an.py
+│   ├── kiem_thu_universal.py
+│   ├── test_hieu_suat_1k.py
+│   └── test_hieu_suat_toan_dien.py
+├── 📂 env/                          # Virtual environment
+├── 📂 .github/                      # GitHub configs
+├── HUONG_DAN_SCRIPTS.md            # Scripts usage guide
+└── README.md                        # Documentation
 │   └── tao_du_lieu_1k.py
 ├── 📂 tests/                        # Kiểm thử
 │   ├── demo_hoan_chinh.py
