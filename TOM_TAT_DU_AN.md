@@ -1,5 +1,5 @@
 # 🚀 UNIVERSAL DATABASE CONNECTOR FOR TABLEAU
-## Dự án tốt nghiệp - Kết nối Tableau với bất kỳ SQL Server database nào
+## Dự án đầu tay - Kết nối Tableau với bất kỳ SQL Server database nào
 
 ### 📋 TỔNG QUAN DỰ ÁN
 
