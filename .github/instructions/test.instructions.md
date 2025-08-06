@@ -28,4 +28,5 @@ applyTo: '**'
 - Thay vì tạo terminal mới thì sử dụng lệnh cls hoăc clear để làm sạch terminal hiện tại.
 - Không sử dụng các ký tự đặc biệt trong tên file, thư mục.
 - không đc xóa files .github dưới bất kỳ hình thức nào.
--
+- cẩn thận mỗi lần nâng cấp phiên bản sẽ có sự khác nhau về cách sử dụng.
+python src/tableau_universal_connector.py

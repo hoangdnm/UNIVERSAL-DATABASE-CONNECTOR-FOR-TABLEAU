@@ -275,6 +275,31 @@ TABLEAU_WDC_TEMPLATE = '''
             border-radius: 5px;
             margin-top: 20px;
         }
+        
+        .table-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .table-checkbox:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .table-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            width: auto;
+        }
+        
+        .table-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +312,7 @@ TABLEAU_WDC_TEMPLATE = '''
             <ul>
                 <li><strong>Universal Connection:</strong> Kết nối với bất kỳ SQL Server database nào</li>
                 <li><strong>Auto Schema Detection:</strong> Tự động phát hiện cấu trúc bảng</li>
+                <li><strong>Multi-Table Focus:</strong> 🆕 Chọn và kết hợp nhiều bảng cùng lúc</li>
                 <li><strong>Dynamic Data Loading:</strong> Tải dữ liệu linh hoạt theo cấu hình</li>
                 <li><strong>Tableau Integration:</strong> Tương thích hoàn toàn với Tableau Desktop</li>
             </ul>
@@ -300,10 +326,13 @@ TABLEAU_WDC_TEMPLATE = '''
         </div>
         
         <div class="form-group">
-            <label for="tableSelect">Chọn bảng dữ liệu:</label>
-            <select id="tableSelect">
-                <option value="">Chọn database trước...</option>
-            </select>
+            <label for="tablesContainer">Chọn các bảng dữ liệu (có thể chọn nhiều):</label>
+            <div id="tablesContainer" style="max-height: 200px; overflow-y: auto; border: 2px solid #ecf0f1; border-radius: 5px; padding: 10px;">
+                <div style="color: #7f8c8d; font-style: italic;">Chọn database trước để hiển thị danh sách bảng...</div>
+            </div>
+            <div style="margin-top: 5px; font-size: 12px; color: #7f8c8d;">
+                <span id="selectedTablesCount">0</span> bảng đã chọn
+            </div>
         </div>
         
         <div class="form-group">
@@ -350,6 +379,46 @@ TABLEAU_WDC_TEMPLATE = '''
     </div>
 
     <script type="text/javascript">
+        // Global functions cần thiết cho HTML inline events
+        function toggleAllTables() {
+            var selectAllCheckbox = document.getElementById('selectAllTables');
+            var tableCheckboxes = document.querySelectorAll('input[name="selectedTables"]');
+            
+            tableCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelectedTablesCount();
+        }
+        
+        function updateSelectedTablesCount() {
+            var selectedCheckboxes = document.querySelectorAll('input[name="selectedTables"]:checked');
+            var countElement = document.getElementById('selectedTablesCount');
+            countElement.textContent = selectedCheckboxes.length;
+            
+            // Cập nhật trạng thái "Chọn tất cả"
+            var selectAllCheckbox = document.getElementById('selectAllTables');
+            var allCheckboxes = document.querySelectorAll('input[name="selectedTables"]');
+            
+            if (selectAllCheckbox && allCheckboxes.length > 0) {
+                if (selectedCheckboxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (selectedCheckboxes.length === allCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+        }
+        
+        function getSelectedTables() {
+            var selectedCheckboxes = document.querySelectorAll('input[name="selectedTables"]:checked');
+            return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+        }
+        
         (function() {
             // Load thông tin database và bảng
             loadDatabaseInfo();
@@ -361,7 +430,8 @@ TABLEAU_WDC_TEMPLATE = '''
                 if (selectedDatabase) {
                     loadTableList(selectedDatabase);
                 } else {
-                    document.getElementById('tableSelect').innerHTML = '<option value="">Chọn database trước...</option>';
+                    document.getElementById('tablesContainer').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Chọn database trước để hiển thị danh sách bảng...</div>';
+                    updateSelectedTablesCount();
                 }
             });
             
@@ -453,71 +523,111 @@ TABLEAU_WDC_TEMPLATE = '''
                     })
                     .then(data => {
                         console.log('📊 Tables API response:', data);
-                        var tableSelect = document.getElementById('tableSelect');
-                        tableSelect.innerHTML = '';
+                        var tablesContainer = document.getElementById('tablesContainer');
+                        tablesContainer.innerHTML = '';
                         
                         if (data.success && data.tables && data.tables.length > 0) {
                             console.log('✅ Tìm thấy', data.tables.length, 'bảng');
+                            
+                            // Tạo checkbox "Chọn tất cả"
+                            var selectAllDiv = document.createElement('div');
+                            selectAllDiv.className = 'table-checkbox';
+                            selectAllDiv.innerHTML = `
+                                <input type="checkbox" id="selectAllTables" onchange="toggleAllTables()">
+                                <label for="selectAllTables"><strong>Chọn tất cả bảng</strong></label>
+                            `;
+                            tablesContainer.appendChild(selectAllDiv);
+                            
+                            // Thêm đường phân cách
+                            var separator = document.createElement('hr');
+                            separator.style.margin = '10px 0';
+                            tablesContainer.appendChild(separator);
+                            
                             data.tables.forEach(table => {
-                                var option = document.createElement('option');
-                                option.value = table;
-                                option.textContent = table;
-                                tableSelect.appendChild(option);
+                                var tableDiv = document.createElement('div');
+                                tableDiv.className = 'table-checkbox';
+                                tableDiv.innerHTML = `
+                                    <input type="checkbox" id="table_${table}" name="selectedTables" value="${table}" onchange="updateSelectedTablesCount()">
+                                    <label for="table_${table}">${table}</label>
+                                `;
+                                tablesContainer.appendChild(tableDiv);
                                 console.log('➕ Đã thêm bảng:', table);
                             });
+                            
+                            updateSelectedTablesCount();
                         } else {
                             console.log('❌ Không tìm thấy bảng hoặc lỗi:', data);
-                            var option = document.createElement('option');
-                            option.textContent = data.success ? 'Không tìm thấy bảng nào' : ('Lỗi: ' + (data.error || 'Unknown error'));
-                            tableSelect.appendChild(option);
+                            tablesContainer.innerHTML = `<div style="color: #dc3545; font-style: italic;">${data.success ? 'Không tìm thấy bảng nào trong database này' : ('Lỗi: ' + (data.error || 'Unknown error'))}</div>`;
                         }
                     })
                     .catch(error => {
                         console.error('❌ Error loading tables:', error);
-                        document.getElementById('tableSelect').innerHTML = '<option>Lỗi tải danh sách bảng</option>';
+                        document.getElementById('tablesContainer').innerHTML = '<div style="color: #dc3545; font-style: italic;">Lỗi tải danh sách bảng</div>';
                     });
             }
             
             // Khởi tạo Tableau WDC
             var myConnector = tableau.makeConnector();
             
-            // Định nghĩa schema động
+            // Định nghĩa schema động - mỗi bảng riêng biệt (KHÔNG kết hợp)
             myConnector.getSchema = function(schemaCallback) {
                 var connectionData = JSON.parse(tableau.connectionData);
-                var tableName = connectionData.table;
+                var selectedTables = connectionData.tables;
                 var database = connectionData.database;
                 
-                // Lấy schema từ server
-                var schemaUrl = `/api/schema/${tableName}`;
-                if (database) {
-                    schemaUrl += `?database=${encodeURIComponent(database)}`;
+                if (!selectedTables || selectedTables.length === 0) {
+                    tableau.abortWithError("Không có bảng nào được chọn");
+                    return;
                 }
                 
-                fetch(schemaUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            var cols = data.schema.columns.map(col => ({
-                                "id": col.column_name,
-                                "alias": col.column_name,
-                                "dataType": getTableauDataType(col.tableau_type)
-                            }));
-                            
-                            var tableSchema = {
-                                "id": tableName,
-                                "alias": `Dữ liệu từ ${database}.${tableName}`,
-                                "columns": cols
-                            };
-                            
-                            schemaCallback([tableSchema]);
-                        } else {
-                            tableau.abortWithError("Không thể lấy schema của bảng");
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Lỗi lấy schema:", error);
-                        tableau.abortWithError("Lỗi kết nối server");
-                    });
+                console.log(`🔄 Tạo schema cho ${selectedTables.length} bảng riêng biệt...`);
+                
+                // Tạo schema riêng cho từng bảng (KHÔNG kết hợp)
+                var allSchemas = [];
+                var processedCount = 0;
+                
+                selectedTables.forEach(function(tableName) {
+                    var schemaUrl = `/api/schema/${tableName}`;
+                    if (database) {
+                        schemaUrl += `?database=${encodeURIComponent(database)}`;
+                    }
+                    
+                    fetch(schemaUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                var cols = data.schema.columns.map(col => ({
+                                    "id": col.column_name,
+                                    "alias": col.column_name,
+                                    "dataType": getTableauDataType(col.tableau_type)
+                                }));
+                                
+                                // Mỗi bảng là một table riêng biệt trong Tableau
+                                var tableSchema = {
+                                    "id": tableName,
+                                    "alias": `${tableName} (${database})`,
+                                    "columns": cols
+                                };
+                                
+                                allSchemas.push(tableSchema);
+                                processedCount++;
+                                
+                                console.log(`✅ Đã tạo schema cho bảng: ${tableName}`);
+                                
+                                // Khi đã xử lý xong tất cả bảng
+                                if (processedCount === selectedTables.length) {
+                                    console.log(`🎉 Hoàn thành tạo ${allSchemas.length} table schema riêng biệt`);
+                                    schemaCallback(allSchemas);
+                                }
+                            } else {
+                                tableau.abortWithError(`Không thể lấy schema của bảng ${tableName}`);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`Lỗi lấy schema bảng ${tableName}:`, error);
+                            tableau.abortWithError(`Lỗi kết nối server khi lấy schema ${tableName}`);
+                        });
+                });
             };
             
             function getTableauDataType(type) {
@@ -530,11 +640,22 @@ TABLEAU_WDC_TEMPLATE = '''
                 }
             }
             
-            // Lấy dữ liệu
+            // Lấy dữ liệu cho từng bảng riêng biệt (KHÔNG kết hợp)
             myConnector.getData = function(table, doneCallback) {
                 var connectionData = JSON.parse(tableau.connectionData);
+                var selectedTables = connectionData.tables;
                 
-                var apiUrl = `/api/data/${connectionData.table}?limit=${connectionData.limit}&order=${connectionData.order}`;
+                if (!selectedTables || selectedTables.length === 0) {
+                    tableau.abortWithError("Không có bảng nào được chọn");
+                    return;
+                }
+                
+                // Tìm bảng nào đang được load dựa trên table.tableInfo.id
+                var currentTableName = table.tableInfo.id;
+                console.log(`🔄 Đang tải dữ liệu cho bảng: ${currentTableName}`);
+                
+                // API endpoint cho bảng hiện tại
+                var apiUrl = `/api/data/${currentTableName}?limit=${connectionData.limit}&order=${connectionData.order}`;
                 if (connectionData.database) {
                     apiUrl += `&database=${encodeURIComponent(connectionData.database)}`;
                 }
@@ -546,23 +667,26 @@ TABLEAU_WDC_TEMPLATE = '''
                     .then(response => response.json())
                     .then(data => {
                         if (data.success && data.data) {
+                            console.log(`✅ Đã tải ${data.data.length} dòng từ bảng ${currentTableName}`);
                             table.appendRows(data.data);
+                        } else {
+                            console.warn(`⚠️ Không có dữ liệu từ bảng ${currentTableName}`);
                         }
                         doneCallback();
                     })
                     .catch(error => {
-                        console.error("Lỗi khi lấy dữ liệu:", error);
-                        tableau.abortWithError("Không thể lấy dữ liệu từ API");
+                        console.error(`❌ Lỗi khi lấy dữ liệu bảng ${currentTableName}:`, error);
+                        tableau.abortWithError(`Không thể lấy dữ liệu từ bảng ${currentTableName}`);
                     });
             };
             
             // Đăng ký connector
             tableau.registerConnector(myConnector);
             
-            // Xử lý sự kiện submit
+            // Xử lý sự kiện submit cho nhiều bảng
             document.getElementById("submitButton").addEventListener("click", function() {
                 var database = document.getElementById("databaseSelect").value;
-                var table = document.getElementById("tableSelect").value;
+                var selectedTables = getSelectedTables();
                 var limit = document.getElementById("limitSelect").value;
                 var order = document.getElementById("orderSelect").value;
                 var where = document.getElementById("whereInput").value;
@@ -572,20 +696,31 @@ TABLEAU_WDC_TEMPLATE = '''
                     return;
                 }
                 
-                if (!table) {
-                    alert("Vui lòng chọn bảng dữ liệu");
+                if (selectedTables.length === 0) {
+                    alert("Vui lòng chọn ít nhất một bảng dữ liệu");
                     return;
                 }
                 
                 tableau.connectionData = JSON.stringify({
                     "database": database,
-                    "table": table,
+                    "tables": selectedTables,
                     "limit": limit,
                     "order": order,
                     "where": where
                 });
                 
-                tableau.connectionName = `${database}.${table} (${limit === '0' ? 'Tất cả' : limit} dòng)`;
+                if (selectedTables.length === 1) {
+                    tableau.connectionName = `${database}.${selectedTables[0]} (${limit === '0' ? 'Tất cả' : limit} dòng)`;
+                } else {
+                    tableau.connectionName = `${database} - ${selectedTables.length} bảng (${limit === '0' ? 'Tất cả' : limit} dòng mỗi bảng)`;
+                }
+                
+                console.log("🚀 Kết nối Tableau với:", {
+                    database: database,
+                    tables: selectedTables,
+                    limit: limit
+                });
+                
                 tableau.submit();
             });
         })();
@@ -783,10 +918,11 @@ if __name__ == '__main__':
     print("🔗 URL cho Tableau: http://127.0.0.1:5002")
     print("📊 Cấu hình database: config/database_config.json")
     print("")
-    print("🎯 TÍNH NĂNG NÂNG CAO:")
-    print("  ✅ Kết nối với bất kỳ SQL Server database nào")
-    print("  ✅ Tự động phát hiện schema của bảng")
-    print("  ✅ Linh hoạt chọn bảng và số lượng dữ liệu")
+    print("🎯 TÍNH NĂNG NÂNG CẤP - FOCUS NHIỀU BẢNG:")
+    print("  ✅ Chọn nhiều bảng cùng lúc bằng checkbox")
+    print("  ✅ Mỗi bảng là một dataset riêng biệt trong Tableau")
+    print("  ✅ KHÔNG tự động kết hợp dữ liệu")
+    print("  ✅ User có thể chọn từng bảng để phân tích")
     print("  ✅ Hỗ trợ câu truy vấn WHERE tùy chỉnh")
     print("")
     print("⏹️  Nhấn Ctrl+C để dừng server")

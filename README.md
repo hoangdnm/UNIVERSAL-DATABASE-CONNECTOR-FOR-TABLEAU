@@ -98,6 +98,12 @@ test_ind/
 │   ├── database_config.json
 │   ├── docker-compose.yml
 │   └── requirements.txt
+├── 📂 docs/                         # 📚 Tài liệu dự án
+│   ├── KET_QUA_KIEM_THU.md
+│   ├── TOM_TAT_DU_AN.md
+│   ├── TINH_NANG_FOCUS_NHIEU_BANG.md
+│   ├── HUONG_DAN_SCRIPTS.md
+│   └── COMMIT_SUMMARY.md
 ├── 📂 scripts/                      # Scripts tiện ích
 │   ├── cau_hinh_database.py
 │   ├── demo_universal.py
@@ -135,6 +141,15 @@ test_ind/
 ├── kiem_tra_moi_truong.bat         # Environment check
 └── README.md                        # Documentation
 ```
+
+## 📚 Tài liệu chi tiết
+
+> 📁 **Tất cả tài liệu được tổ chức trong thư mục [`docs/`](docs/)**
+
+- 📊 [Kết quả kiểm thử](docs/KET_QUA_KIEM_THU.md) - Phân tích chi tiết hiệu suất
+- 📋 [Tóm tắt dự án](docs/TOM_TAT_DU_AN.md) - Tổng quan toàn bộ project  
+- 🚀 [Tính năng focus nhiều bảng](docs/TINH_NANG_FOCUS_NHIEU_BANG.md) - Tính năng mới
+- 📖 [Hướng dẫn scripts](docs/HUONG_DAN_SCRIPTS.md) - Cách sử dụng scripts
 
 ## 🧪 Kiểm thử
 
