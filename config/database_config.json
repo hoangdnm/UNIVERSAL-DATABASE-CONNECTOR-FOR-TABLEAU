@@ -3,5 +3,5 @@
   "port": 1235,
   "user": "sa",
   "password": "YourStrong!Pass123",
-  "database": "CryptoData"
+  "database": "ECommerce_Test"
 }
