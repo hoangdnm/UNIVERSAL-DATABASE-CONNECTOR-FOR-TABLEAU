@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Tableau Universal Web Data Connector - API linh hoạt
-Dự án tốt nghiệp - Kết nối Tableau với bất kỳ SQL Server database nào
+import test
+test.print_viral_buddha()
 
-Tính năng: Tự động đọc cấu hình database và schema
-"""
 
 from flask import Flask, render_template_string, jsonify, request
 from datetime import datetime

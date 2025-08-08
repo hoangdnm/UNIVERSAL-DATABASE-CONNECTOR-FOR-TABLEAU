@@ -1,12 +1,15 @@
 # 🗺️ ROADMAP NÂNG CẤP DỰ ÁN
+
 ## Từ Universal Connector → Mini Tableau Server
 
 ### 📋 **TỔNG QUAN**
+
 Roadmap chi tiết để nâng cấp dự án từ Data Connector đơn giản thành một Mini Tableau Server với đầy đủ tính năng.
 
 ---
 
 ## 🎯 **PHASE 1: FOUNDATION (Tuần 1-2)**
+
 ### Mục tiêu: Tạo nền tảng cơ bản cho các tính năng nâng cao
 
 | Tính năng | Độ khó | Thời gian | File hướng dẫn |
@@ -20,6 +23,7 @@ Roadmap chi tiết để nâng cấp dự án từ Data Connector đơn giản t
 ---
 
 ## 🔐 **PHASE 2: USER SYSTEM (Tuần 3-5)**
+
 ### Mục tiêu: Xây dựng hệ thống người dùng và bảo mật
 
 | Tính năng | Độ khó | Thời gian | File hướng dẫn |
@@ -33,6 +37,7 @@ Roadmap chi tiết để nâng cấp dự án từ Data Connector đơn giản t
 ---
 
 ## 📊 **PHASE 3: ADVANCED FEATURES (Tuần 6-10)**
+
 ### Mục tiêu: Tính năng nâng cao giống Tableau Server
 
 | Tính năng | Độ khó | Thời gian | File hướng dẫn |
@@ -46,6 +51,7 @@ Roadmap chi tiết để nâng cấp dự án từ Data Connector đơn giản t
 ---
 
 ## 🚀 **BONUS PHASE: ENTERPRISE (Tuần 11+)**
+
 ### Mục tiêu: Tính năng doanh nghiệp (tùy chọn)
 
 | Tính năng | Độ khó | Thời gian | File hướng dẫn |
@@ -72,6 +78,7 @@ Mỗi file hướng dẫn sẽ chứa:
 ## 🎯 **CHIẾN LƯỢC HỌC TẬP**
 
 ### Tuần 1-2: Foundation
+
 ```bash
 # Bắt đầu với Mobile Responsive (dễ nhất)
 docs/HUONG_DAN_MOBILE_RESPONSIVE.md
@@ -84,6 +91,7 @@ docs/HUONG_DAN_EXPORT_FEATURES.md
 ```
 
 ### Tuần 3-5: User System
+
 ```bash
 # Học database trước
 docs/HUONG_DAN_DATABASE_SETUP.md
@@ -96,6 +104,7 @@ docs/HUONG_DAN_SHARING_SYSTEM.md
 ```
 
 ### Tuần 6+: Advanced
+
 ```bash
 # Tính năng khó nhất - từ từ làm
 docs/HUONG_DAN_DASHBOARD_HOSTING.md
