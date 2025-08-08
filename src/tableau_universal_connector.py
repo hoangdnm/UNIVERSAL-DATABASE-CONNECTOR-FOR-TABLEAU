@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Tableau Universal Web Data Connector - API linh hoạt
-Dự án tốt nghiệp - Kết nối Tableau với bất kỳ SQL Server database nào
-
-Tính năng: Tự động đọc cấu hình database và schema
-"""
 
 from flask import Flask, render_template_string, jsonify, request
 from datetime import datetime
 import json
 import os
 import pymssql
+import test
 
 app = Flask(__name__)
 
@@ -912,6 +907,7 @@ def get_table_data(table_name):
         })
 
 if __name__ == '__main__':
+    print(test.print_viral_buddha())
     print("🌐 TABLEAU UNIVERSAL DATABASE CONNECTOR")
     print("=" * 55)
     print("🚀 Đang khởi động server...")
@@ -925,6 +921,7 @@ if __name__ == '__main__':
     print("  ✅ User có thể chọn từng bảng để phân tích")
     print("  ✅ Hỗ trợ câu truy vấn WHERE tùy chỉnh")
     print("")
+
     print("⏹️  Nhấn Ctrl+C để dừng server")
     print("=" * 55)
     
