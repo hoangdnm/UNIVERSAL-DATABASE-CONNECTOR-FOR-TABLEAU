@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 import os
 import pymssql
-import test
+
 
 app = Flask(__name__)
 
@@ -314,15 +314,18 @@ TABLEAU_WDC_TEMPLATE = '''
         </div>
         
         <div class="form-group">
-            <label for="databaseSelect">Chọn database:</label>
-            <select id="databaseSelect">
-                <option value="">Đang tải danh sách database...</option>
-            </select>
+            <label>Chọn database (có thể chọn nhiều):</label>
+            <div id="databasesContainer" style="max-height: 150px; overflow-y: auto; border: 2px solid #ecf0f1; border-radius: 5px; padding: 10px; background: white;">
+                <div style="color: #7f8c8d; font-style: italic;">Đang tải danh sách database...</div>
+            </div>
+            <div style="margin-top: 5px; font-size: 12px; color: #7f8c8d;">
+                <span id="selectedDatabasesCount">0</span> database đã chọn
+            </div>
         </div>
         
         <div class="form-group">
-            <label for="tablesContainer">Chọn các bảng dữ liệu (có thể chọn nhiều):</label>
-            <div id="tablesContainer" style="max-height: 200px; overflow-y: auto; border: 2px solid #ecf0f1; border-radius: 5px; padding: 10px;">
+            <label>Chọn các bảng dữ liệu (có thể chọn nhiều):</label>
+            <div id="tablesContainer" style="max-height: 250px; overflow-y: auto; border: 2px solid #ecf0f1; border-radius: 5px; padding: 10px; background: white;">
                 <div style="color: #7f8c8d; font-style: italic;">Chọn database trước để hiển thị danh sách bảng...</div>
             </div>
             <div style="margin-top: 5px; font-size: 12px; color: #7f8c8d;">
@@ -375,6 +378,133 @@ TABLEAU_WDC_TEMPLATE = '''
 
     <script type="text/javascript">
         // Global functions cần thiết cho HTML inline events
+        
+        // ===== FUNCTIONS CHO DATABASE CHECKBOXES =====
+        function toggleAllDatabases() {
+            var selectAllCheckbox = document.getElementById('selectAllDatabases');
+            var databaseCheckboxes = document.querySelectorAll('input[name="selectedDatabases"]');
+            
+            databaseCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            
+            updateSelectedDatabasesCount();
+            loadTablesFromSelectedDatabases();
+        }
+        
+        // ===== FUNCTION LOAD BẢNG TỪ NHIỀU DATABASE =====
+        function loadTablesFromSelectedDatabases() {
+            var selectedDatabases = getSelectedDatabases();
+            console.log('🔄 Đang tải bảng từ', selectedDatabases.length, 'database(s):', selectedDatabases);
+            
+            var tablesContainer = document.getElementById('tablesContainer');
+            
+            if (selectedDatabases.length === 0) {
+                tablesContainer.innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Chọn database trước để hiển thị danh sách bảng...</div>';
+                updateSelectedTablesCount();
+                return;
+            }
+            
+            tablesContainer.innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Đang tải bảng...</div>';
+            
+            // Load bảng từ từng database
+            Promise.all(selectedDatabases.map(database => 
+                fetch(`/api/tables?database=${encodeURIComponent(database)}`)
+                    .then(response => response.json())
+                    .then(data => ({ database, data }))
+            ))
+            .then(results => {
+                tablesContainer.innerHTML = '';
+                
+                // Thêm checkbox "Chọn tất cả"
+                var selectAllDiv = document.createElement('div');
+                selectAllDiv.className = 'table-checkbox';
+                selectAllDiv.innerHTML = `
+                    <input type="checkbox" id="selectAllTables" onchange="toggleAllTables()">
+                    <label for="selectAllTables"><strong>Chọn tất cả bảng</strong></label>
+                `;
+                tablesContainer.appendChild(selectAllDiv);
+                
+                // Thêm đường phân cách
+                var separator = document.createElement('hr');
+                separator.style.margin = '10px 0';
+                tablesContainer.appendChild(separator);
+                
+                // Hiển thị bảng từ từng database
+                results.forEach(result => {
+                    var database = result.database;
+                    var data = result.data;
+                    
+                    if (data.success && data.tables && data.tables.length > 0) {
+                        // Thêm header database
+                        var dbHeader = document.createElement('div');
+                        dbHeader.style.cssText = 'font-weight: bold; color: #2980b9; margin-top: 15px; margin-bottom: 8px; padding: 5px; background: #ecf0f1; border-radius: 4px;';
+                        dbHeader.textContent = `━━━ ${database} (${data.tables.length} bảng) ━━━`;
+                        tablesContainer.appendChild(dbHeader);
+                        
+                        // Thêm checkbox cho từng bảng với format DB.Table
+                        data.tables.forEach(table => {
+                            var tableDiv = document.createElement('div');
+                            tableDiv.className = 'table-checkbox';
+                            var tableId = `${database}.${table}`;
+                            tableDiv.innerHTML = `
+                                <input type="checkbox" id="table_${tableId.replace(/\./g, '_')}" name="selectedTables" value="${tableId}" onchange="updateSelectedTablesCount()">
+                                <label for="table_${tableId.replace(/\./g, '_')}">  • ${table}</label>
+                            `;
+                            tablesContainer.appendChild(tableDiv);
+                        });
+                    }
+                });
+                
+                updateSelectedTablesCount();
+                console.log('✅ Đã tải xong bảng từ', selectedDatabases.length, 'database(s)');
+            })
+            .catch(error => {
+                console.error('❌ Error loading tables:', error);
+                tablesContainer.innerHTML = '<div style="color: #dc3545; font-style: italic;">Lỗi tải danh sách bảng</div>';
+            });
+        }
+        
+        function updateSelectedDatabasesCount(shouldLoadTables) {
+            console.log('🔍 updateSelectedDatabasesCount called, shouldLoadTables:', shouldLoadTables);
+            var selectedCheckboxes = document.querySelectorAll('input[name="selectedDatabases"]:checked');
+            var countElement = document.getElementById('selectedDatabasesCount');
+            
+            console.log('📊 Selected databases:', selectedCheckboxes.length);
+            
+            if (countElement) {
+                countElement.textContent = selectedCheckboxes.length;
+            }
+            
+            // Cập nhật trạng thái "Chọn tất cả"
+            var selectAllCheckbox = document.getElementById('selectAllDatabases');
+            var allCheckboxes = document.querySelectorAll('input[name="selectedDatabases"]');
+            
+            if (selectAllCheckbox && allCheckboxes.length > 0) {
+                if (selectedCheckboxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (selectedCheckboxes.length === allCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+            
+            // Chỉ tự động load bảng khi user thay đổi selection (không phải lúc init)
+            if (shouldLoadTables !== false) {
+                loadTablesFromSelectedDatabases();
+            }
+        }
+        
+        function getSelectedDatabases() {
+            var selectedCheckboxes = document.querySelectorAll('input[name="selectedDatabases"]:checked');
+            return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+        }
+        
+        // ===== FUNCTIONS CHO TABLE CHECKBOXES =====
         function toggleAllTables() {
             var selectAllCheckbox = document.getElementById('selectAllTables');
             var tableCheckboxes = document.querySelectorAll('input[name="selectedTables"]');
@@ -389,7 +519,10 @@ TABLEAU_WDC_TEMPLATE = '''
         function updateSelectedTablesCount() {
             var selectedCheckboxes = document.querySelectorAll('input[name="selectedTables"]:checked');
             var countElement = document.getElementById('selectedTablesCount');
-            countElement.textContent = selectedCheckboxes.length;
+            
+            if (countElement) {
+                countElement.textContent = selectedCheckboxes.length;
+            }
             
             // Cập nhật trạng thái "Chọn tất cả"
             var selectAllCheckbox = document.getElementById('selectAllTables');
@@ -415,20 +548,59 @@ TABLEAU_WDC_TEMPLATE = '''
         }
         
         (function() {
+            // Đọc URL parameters (hỗ trợ cả format cũ và mới)
+            function getUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                return {
+                    // Format mới: databases=DB1,DB2,DB3
+                    databases: params.get('databases') ? params.get('databases').split(',') : 
+                               // Format cũ: database=DB1 (backwards compatible)
+                               (params.get('database') ? [params.get('database')] : []),
+                    // tables với format DB.Table hoặc Table
+                    tables: params.get('tables') ? params.get('tables').split(',') : []
+                };
+            }
+            
             // Load thông tin database và bảng
             loadDatabaseInfo();
             loadDatabaseList();
             
-            // Xử lý sự kiện thay đổi database
-            document.getElementById('databaseSelect').addEventListener('change', function() {
-                var selectedDatabase = this.value;
-                if (selectedDatabase) {
-                    loadTableList(selectedDatabase);
-                } else {
-                    document.getElementById('tablesContainer').innerHTML = '<div style="color: #7f8c8d; font-style: italic;">Chọn database trước để hiển thị danh sách bảng...</div>';
-                    updateSelectedTablesCount();
-                }
-            });
+            // Xử lý URL parameters sau khi load xong database list
+            const urlParams = getUrlParams();
+            if (urlParams.databases.length > 0) {
+                console.log('🔗 Phát hiện URL parameters:', urlParams);
+                // Đợi một chút để database list load xong
+                setTimeout(function() {
+                    // Chọn các database
+                    urlParams.databases.forEach(function(dbName) {
+                        const checkbox = document.getElementById('db_' + dbName);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log('✅ Đã chọn database:', dbName);
+                        }
+                    });
+                    updateSelectedDatabasesCount();
+                    
+                    // Load bảng từ các database đã chọn
+                    loadTablesFromSelectedDatabases();
+                    
+                    // Đợi tables load xong rồi mới check các bảng
+                    if (urlParams.tables.length > 0) {
+                        setTimeout(function() {
+                            urlParams.tables.forEach(function(tableName) {
+                                // tableName có thể là "DB.Table" hoặc "Table"
+                                const tableId = 'table_' + tableName.replace(/\./g, '_');
+                                const checkbox = document.getElementById(tableId);
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                    console.log('✅ Đã chọn bảng:', tableName);
+                                }
+                            });
+                            updateSelectedTablesCount();
+                        }, 1500);
+                    }
+                }, 500);
+            }
             
             // Xử lý sự kiện thay đổi order
             document.getElementById('orderSelect').addEventListener('change', function() {
@@ -475,34 +647,48 @@ TABLEAU_WDC_TEMPLATE = '''
                     })
                     .then(data => {
                         console.log('📊 Database API response:', data);
-                        var databaseSelect = document.getElementById('databaseSelect');
-                        databaseSelect.innerHTML = '';
+                        var databasesContainer = document.getElementById('databasesContainer');
+                        databasesContainer.innerHTML = '';
                         
                         if (data.success && data.databases && data.databases.length > 0) {
                             console.log('✅ Tìm thấy', data.databases.length, 'database(s)');
-                            // Thêm option mặc định
-                            var defaultOption = document.createElement('option');
-                            defaultOption.value = '';
-                            defaultOption.textContent = 'Chọn database...';
-                            databaseSelect.appendChild(defaultOption);
                             
+                            // Thêm checkbox "Chọn tất cả"
+                            var selectAllDiv = document.createElement('div');
+                            selectAllDiv.className = 'table-checkbox';
+                            selectAllDiv.innerHTML = `
+                                <input type="checkbox" id="selectAllDatabases" onchange="toggleAllDatabases()">
+                                <label for="selectAllDatabases"><strong>Chọn tất cả database</strong></label>
+                            `;
+                            databasesContainer.appendChild(selectAllDiv);
+                            
+                            // Thêm đường phân cách
+                            var separator = document.createElement('hr');
+                            separator.style.margin = '10px 0';
+                            databasesContainer.appendChild(separator);
+                            
+                            // Thêm checkbox cho từng database
                             data.databases.forEach(database => {
-                                var option = document.createElement('option');
-                                option.value = database;
-                                option.textContent = database;
-                                databaseSelect.appendChild(option);
+                                var dbDiv = document.createElement('div');
+                                dbDiv.className = 'table-checkbox';
+                                dbDiv.innerHTML = `
+                                    <input type="checkbox" id="db_${database}" name="selectedDatabases" value="${database}" onchange="updateSelectedDatabasesCount()">
+                                    <label for="db_${database}">${database}</label>
+                                `;
+                                databasesContainer.appendChild(dbDiv);
                                 console.log('➕ Đã thêm database:', database);
                             });
+                            
+                            // Init: chỉ update count, không load tables
+                            updateSelectedDatabasesCount(false);
                         } else {
                             console.log('❌ Không tìm thấy database hoặc lỗi:', data);
-                            var option = document.createElement('option');
-                            option.textContent = data.success ? 'Không tìm thấy database nào' : ('Lỗi: ' + (data.error || 'Unknown error'));
-                            databaseSelect.appendChild(option);
+                            databasesContainer.innerHTML = `<div style="color: #dc3545; font-style: italic;">${data.success ? 'Không tìm thấy database nào' : ('Lỗi: ' + (data.error || 'Unknown error'))}</div>`;
                         }
                     })
                     .catch(error => {
                         console.error('❌ Error loading databases:', error);
-                        document.getElementById('databaseSelect').innerHTML = '<option>Lỗi tải danh sách database</option>';
+                        document.getElementById('databasesContainer').innerHTML = '<div style="color: #dc3545; font-style: italic;">Lỗi tải danh sách database</div>';
                     });
             }
             
@@ -678,16 +864,16 @@ TABLEAU_WDC_TEMPLATE = '''
             // Đăng ký connector
             tableau.registerConnector(myConnector);
             
-            // Xử lý sự kiện submit cho nhiều bảng
+            // Xử lý sự kiện submit cho nhiều database & nhiều bảng
             document.getElementById("submitButton").addEventListener("click", function() {
-                var database = document.getElementById("databaseSelect").value;
+                var selectedDatabases = getSelectedDatabases();
                 var selectedTables = getSelectedTables();
                 var limit = document.getElementById("limitSelect").value;
                 var order = document.getElementById("orderSelect").value;
                 var where = document.getElementById("whereInput").value;
                 
-                if (!database) {
-                    alert("Vui lòng chọn database");
+                if (selectedDatabases.length === 0) {
+                    alert("Vui lòng chọn ít nhất một database");
                     return;
                 }
                 
@@ -696,22 +882,26 @@ TABLEAU_WDC_TEMPLATE = '''
                     return;
                 }
                 
+                // Connection data với format mới
                 tableau.connectionData = JSON.stringify({
-                    "database": database,
-                    "tables": selectedTables,
+                    "databases": selectedDatabases,  // Array của database names
+                    "tables": selectedTables,         // Array format: ["DB.Table", "DB2.Table2"]
                     "limit": limit,
                     "order": order,
                     "where": where
                 });
                 
-                if (selectedTables.length === 1) {
-                    tableau.connectionName = `${database}.${selectedTables[0]} (${limit === '0' ? 'Tất cả' : limit} dòng)`;
+                // Tạo tên connection
+                if (selectedDatabases.length === 1 && selectedTables.length === 1) {
+                    tableau.connectionName = `${selectedTables[0]} (${limit === '0' ? 'Tất cả' : limit} dòng)`;
+                } else if (selectedDatabases.length === 1) {
+                    tableau.connectionName = `${selectedDatabases[0]} - ${selectedTables.length} bảng`;
                 } else {
-                    tableau.connectionName = `${database} - ${selectedTables.length} bảng (${limit === '0' ? 'Tất cả' : limit} dòng mỗi bảng)`;
+                    tableau.connectionName = `${selectedDatabases.length} databases - ${selectedTables.length} bảng`;
                 }
                 
                 console.log("🚀 Kết nối Tableau với:", {
-                    database: database,
+                    databases: selectedDatabases,
                     tables: selectedTables,
                     limit: limit
                 });
@@ -907,7 +1097,7 @@ def get_table_data(table_name):
         })
 
 if __name__ == '__main__':
-    print(test.print_viral_buddha())
+    
     print("🌐 TABLEAU UNIVERSAL DATABASE CONNECTOR")
     print("=" * 55)
     print("🚀 Đang khởi động server...")
