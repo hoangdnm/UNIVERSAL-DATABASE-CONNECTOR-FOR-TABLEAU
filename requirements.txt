@@ -1,0 +1,29 @@
+# ============================================
+# TABLEAU UNIVERSAL DATABASE CONNECTOR
+# Danh sách thư viện cần thiết cho toàn bộ dự án
+# ============================================
+#
+# Cài đặt:
+#   pip install -r requirements.txt
+#
+# Hoặc với môi trường ảo:
+#   ./env/bin/pip install -r requirements.txt
+#
+# ============================================
+
+# Web Framework - Flask Server
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Database Connectors - SQL Server
+pyodbc>=5.0.0
+pymssql>=2.3.0
+
+# GUI - Desktop Application
+Pillow>=10.0.0
+
+# Optional - Development Tools
+# colorama  # Màu sắc cho terminal (Windows)

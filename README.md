@@ -38,16 +38,28 @@ Tableau Universal Database Connector là giải pháp linh hoạt cho phép Tabl
 ### 1. Clone repository
 ```bash
 git clone <repository-url>
-cd test_ind
+cd UNIVERSAL-DATABASE-CONNECTOR-FOR-TABLEAU
 ```
 
 ### 2. Tạo virtual environment
 ```bash
+# Linux/Mac
+python3 -m venv env
+source env/bin/activate
+
+# Windows
 python -m venv env
 env\Scripts\activate
 ```
 
-### 3. Cài đặt dependencies
+### 3. Cài đặt tất cả dependencies (GỘP TẤT CẢ)
+```bash
+# Cài đặt tất cả thư viện từ file requirements.txt gốc
+pip install -r requirements.txt
+
+# Hoặc cài từng thư viện thủ công
+pip install Flask>=3.0.0 Werkzeug>=3.0.0 requests>=2.31.0
+pip install pyodbc>=5.0.0 pymssql>=2.3.0 Pillow>=10.0.0
 ```bash
 pip install -r config/requirements.txt
 ```

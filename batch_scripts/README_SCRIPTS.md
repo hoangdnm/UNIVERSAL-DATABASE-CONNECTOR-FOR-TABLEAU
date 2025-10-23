@@ -1,5 +1,35 @@
 # 🚀 HƯỚNG DẪN CHẠY DỰ ÁN NHANH
 
+## 📦 Cài đặt Dependencies trước khi chạy
+
+**QUAN TRỌNG**: Cài đặt tất cả thư viện cần thiết trước:
+
+```bash
+# Linux/Mac
+cd /đường/dẫn/đến/dự/án
+pip install -r requirements.txt
+
+# Hoặc với môi trường ảo
+./env/bin/pip install -r requirements.txt
+```
+
+```cmd
+# Windows
+cd C:\đường\dẫn\đến\dự\án
+pip install -r requirements.txt
+
+# Hoặc với môi trường ảo
+env\Scripts\pip install -r requirements.txt
+```
+
+**File `requirements.txt` đã gộp tất cả thư viện cần thiết:**
+- Flask (Web Server)
+- pymssql, pyodbc (Database connectors)
+- Pillow (Desktop GUI)
+- requests, Werkzeug
+
+---
+
 ## ✨ Tính năng của Script
 
 Script **tự động** thực hiện các công việc sau:
