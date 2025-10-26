@@ -113,7 +113,7 @@ echo ""
 echo -e "${YELLOW}[3/5] Kiểm tra các file dự án...${NC}"
 
 WEB_SERVER="$PROJECT_DIR/src/tableau_universal_connector.py"
-DESKTOP_APP="$PROJECT_DIR/Window_application/bai_5_hoan_chinh.py"
+DESKTOP_APP="$PROJECT_DIR/Window_application/desktop_app.py"
 
 if [ ! -f "$WEB_SERVER" ]; then
     echo -e "${RED}✗ Không tìm thấy: $WEB_SERVER${NC}"
@@ -126,7 +126,7 @@ if [ ! -f "$DESKTOP_APP" ]; then
 fi
 
 echo -e "${GREEN}✓ Web Server: src/tableau_universal_connector.py${NC}"
-echo -e "${GREEN}✓ Desktop App: Window_application/bai_5_hoan_chinh.py${NC}"
+echo -e "${GREEN}✓ Desktop App: Window_application/desktop_app.py${NC}"
 echo ""
 
 # Kiểm tra port 5002 có đang được sử dụng không

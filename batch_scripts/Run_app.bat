@@ -107,7 +107,7 @@ echo.
 echo [3/5] Kiểm tra các file dự án...
 
 set "WEB_SERVER=%PROJECT_DIR%\src\tableau_universal_connector.py"
-set "DESKTOP_APP=%PROJECT_DIR%\Window_application\bai_5_hoan_chinh.py"
+set "DESKTOP_APP=%PROJECT_DIR%\Window_application\desktop_app.py"
 
 if not exist "!WEB_SERVER!" (
     echo [X] Không tìm thấy: !WEB_SERVER!
