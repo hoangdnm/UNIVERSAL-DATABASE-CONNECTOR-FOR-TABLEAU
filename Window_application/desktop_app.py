@@ -37,25 +37,52 @@ from typing import Dict, List, Optional
 from PIL import Image, ImageTk
 
 # ============================================
-# PHẦN 1: KIỂM TRA PYMSSQL
+# PHẦN 1: KIỂM TRA PYODBC VÀ PYMSSQL
 # ============================================
 
+CO_PYODBC = False
 CO_PYMSSQL = False
+
+try:
+    import pyodbc
+    CO_PYODBC = True
+    print("✓ pyodbc đã sẵn sàng - Hỗ trợ Windows Authentication")
+except ImportError as e:
+    print(f"⚠ Không thể import pyodbc: {e}")
+
 try:
     import pymssql
     CO_PYMSSQL = True
-    print("✓ pymssql đã sẵn sàng - Kết nối thật")
+    print("✓ pymssql đã sẵn sàng - Hỗ trợ SQL Server Authentication")
 except ImportError as e:
     print(f"⚠ Không thể import pymssql: {e}")
+
+if not CO_PYODBC and not CO_PYMSSQL:
     print("→ Sử dụng chế độ simulation")
-    CO_PYMSSQL = False
+
+# Import module ket noi database
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+try:
+    import database_connector as db_conn
+    CO_DATABASE_CONNECTOR = True
+    print("✓ database_connector module đã sẵn sàng")
+except ImportError as e:
+    print(f"⚠ Không thể import database_connector: {e}")
+    CO_DATABASE_CONNECTOR = False
 
 # ============================================
 # PHẦN 2: CÁC HÀM GIẢ LẬP
 # ============================================
 
 def doc_cau_hinh_database_gia_lap():
-    """Đọc file cấu hình database (giả lập)"""
+    """Đọc file cấu hình database"""
+    # Dung module database_connector neu co
+    if CO_DATABASE_CONNECTOR:
+        return db_conn.doc_cau_hinh_database()
+    
+    # Fallback: doc truc tiep tu file
     config_path = os.path.join(
         os.path.dirname(__file__), 
         '..', 
@@ -67,20 +94,38 @@ def doc_cau_hinh_database_gia_lap():
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
+    # Cấu hình mặc định (container hiện tại)
     return {
         "server": "127.0.0.1",
-        "port": 1235,
+        "port": 1433,  # Container đang dùng port 1433
         "user": "sa",
         "password": "YourStrong!Pass123",
-        "database": "master"
+        "database": "master",
+        "windows_auth": False
     }
 
 def lay_danh_sach_database_gia_lap(config):
-    """Lấy danh sách database (giả lập)"""
+    """Lấy danh sách database"""
+    # Dung module database_connector neu co
+    if CO_DATABASE_CONNECTOR:
+        try:
+            return db_conn.lay_danh_sach_database()
+        except Exception as e:
+            print(f"Lỗi lấy danh sách database: {e}")
+    
+    # Fallback: tra ve du lieu gia lap
     return ["ECommerce_Test", "Inventory_DB", "Sales_DB", "HR_System", "Analytics"]
 
 def lay_danh_sach_bang_gia_lap(config, database_name):
-    """Lấy danh sách bảng (giả lập)"""
+    """Lấy danh sách bảng"""
+    # Dung module database_connector neu co
+    if CO_DATABASE_CONNECTOR:
+        try:
+            return db_conn.lay_danh_sach_bang(database_name)
+        except Exception as e:
+            print(f"Lỗi lấy danh sách bảng: {e}")
+    
+    # Fallback: tra ve du lieu gia lap
     cac_bang_mau = {
         "ECommerce_Test": [
             "Customers", "Orders", "Products", "OrderDetails", 

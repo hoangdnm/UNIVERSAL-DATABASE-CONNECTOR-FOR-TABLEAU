@@ -1,7 +1,8 @@
 {
   "server": "127.0.0.1",
-  "port": 1235,
+  "port": 1433,
   "user": "sa",
   "password": "YourStrong!Pass123",
-  "database": "ECommerce_Test"
+  "database": "master",
+  "windows_auth": false
 }

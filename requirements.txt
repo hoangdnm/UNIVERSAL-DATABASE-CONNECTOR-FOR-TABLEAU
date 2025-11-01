@@ -24,6 +24,7 @@ pymssql>=2.3.0
 
 # GUI - Desktop Application
 Pillow>=10.0.0
+customtkinter>=5.2.0
 
 # Optional - Development Tools
 # colorama  # Màu sắc cho terminal (Windows)

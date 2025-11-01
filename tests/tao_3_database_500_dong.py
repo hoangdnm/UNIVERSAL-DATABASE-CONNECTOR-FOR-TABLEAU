@@ -25,7 +25,7 @@ from typing import Dict, List, Tuple
 
 CAU_HINH_KET_NOI = {
     'server': '127.0.0.1',
-    'port': 1235,
+    'port': 1433,  # Container hiện tại dùng port 1433
     'user': 'sa',
     'password': 'YourStrong!Pass123'
 }

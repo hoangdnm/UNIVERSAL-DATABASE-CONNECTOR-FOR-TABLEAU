@@ -5,7 +5,13 @@ from flask import Flask, render_template_string, jsonify, request
 from datetime import datetime
 import json
 import os
-import pymssql
+import sys
+
+# Them thu muc src vao path de import duoc database_connector
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Import module ket noi database
+import database_connector as db_conn
 
 
 app = Flask(__name__)
@@ -14,78 +20,19 @@ def doc_cau_hinh_database():
     """
     Đọc cấu hình database từ file
     """
-    config_path = "config/database_config.json"
-    if os.path.exists(config_path):
-        with open(config_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    else:
-        # Cấu hình mặc định
-        return {
-            'server': '127.0.0.1',
-            'port': 1433,
-            'user': 'sa',
-            'password': 'YourStrong!Pass123',
-            'database': 'master'
-        }
+    return db_conn.doc_cau_hinh_database()
 
 def lay_danh_sach_database():
     """
     Lấy danh sách tất cả databases có sẵn
     """
-    config = doc_cau_hinh_database()
-    
-    try:
-        ket_noi = pymssql.connect(
-            server=config['server'],
-            port=config['port'],
-            user=config['user'],
-            password=config['password'],
-            database='master'
-        )
-        
-        con_tro = ket_noi.cursor()
-        con_tro.execute("SELECT name FROM sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb') ORDER BY name")
-        
-        database_list = [db[0] for db in con_tro.fetchall()]
-        ket_noi.close()
-        return database_list
-        
-    except Exception as e:
-        print(f"Lỗi lấy danh sách database: {e}")
-        return []
+    return db_conn.lay_danh_sach_database()
 
 def lay_danh_sach_bang(database_name=None):
     """
     Lấy danh sách tất cả bảng trong database
     """
-    config = doc_cau_hinh_database()
-    if database_name:
-        config['database'] = database_name
-    
-    try:
-        ket_noi = pymssql.connect(
-            server=config['server'],
-            port=config['port'],
-            user=config['user'],
-            password=config['password'],
-            database=config['database']
-        )
-        
-        con_tro = ket_noi.cursor()
-        con_tro.execute("""
-        SELECT TABLE_NAME 
-        FROM INFORMATION_SCHEMA.TABLES 
-        WHERE TABLE_TYPE = 'BASE TABLE'
-        ORDER BY TABLE_NAME
-        """)
-        
-        bang_list = [bang[0] for bang in con_tro.fetchall()]
-        ket_noi.close()
-        return bang_list
-        
-    except Exception as e:
-        print(f"Lỗi lấy danh sách bảng: {e}")
-        return []
+    return db_conn.lay_danh_sach_bang(database_name)
 
 def doc_schema_bang(ten_bang):
     """
@@ -106,55 +53,17 @@ def tu_dong_phat_hien_schema(ten_bang, database_name=None):
     """
     config = doc_cau_hinh_database()
     if database_name:
-        config['database'] = database_name
+        db_name = database_name
+    else:
+        db_name = config['database']
     
     try:
-        ket_noi = pymssql.connect(
-            server=config['server'],
-            port=config['port'],
-            user=config['user'],
-            password=config['password'],
-            database=config['database']
-        )
-        
-        con_tro = ket_noi.cursor()
-        con_tro.execute(f"""
-        SELECT 
-            COLUMN_NAME,
-            DATA_TYPE
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_NAME = '{ten_bang}'
-        ORDER BY ORDINAL_POSITION
-        """)
-        
-        cot_list = con_tro.fetchall()
-        
-        columns = []
-        for ten_cot, data_type in cot_list:
-            # Chuyển đổi SQL Server data type sang Tableau data type
-            if data_type in ['int', 'bigint', 'smallint', 'tinyint']:
-                tableau_type = 'int'
-            elif data_type in ['decimal', 'numeric', 'float', 'real', 'money']:
-                tableau_type = 'float'
-            elif data_type in ['datetime', 'datetime2', 'date', 'time']:
-                tableau_type = 'datetime'
-            elif data_type in ['bit']:
-                tableau_type = 'bool'
-            else:
-                tableau_type = 'string'
-            
-            columns.append({
-                'column_name': ten_cot,
-                'sql_type': data_type,
-                'tableau_type': tableau_type
-            })
-        
-        ket_noi.close()
+        columns = db_conn.lay_schema_bang(ten_bang, db_name)
         
         return {
             'table_name': ten_bang,
             'columns': columns,
-            'database': config['database']
+            'database': db_name
         }
         
     except Exception as e:
@@ -776,24 +685,47 @@ TABLEAU_WDC_TEMPLATE = '''
                     fetch(schemaUrl)
                         .then(response => response.json())
                         .then(data => {
-                            if (data.success) {
-                                var cols = data.schema.columns.map(col => ({
-                                    "id": col.column_name,
-                                    "alias": col.column_name,
-                                    "dataType": getTableauDataType(col.tableau_type)
-                                }));
-                                
+                                if (data.success) {
+                                // Validate server response
+                                if (!data.schema || !Array.isArray(data.schema.columns)) {
+                                    console.error('❌ Response schema missing or malformed for', tableName, data);
+                                    tableau.abortWithError(`Server returned invalid schema for ${tableName}`);
+                                    return;
+                                }
+
+                                var cols = data.schema.columns.map(function(col) {
+                                    // Basic validation per-column
+                                    if (!col || !col.column_name) {
+                                        console.error('❌ Column metadata missing column_name:', col, 'for table', tableName);
+                                        return null;
+                                    }
+                                    return {
+                                        "id": String(col.column_name),
+                                        "alias": String(col.column_name),
+                                        "dataType": getTableauDataType(col.tableau_type)
+                                    };
+                                }).filter(function(c){ return c !== null; });
+
+                                // Ensure columns is not empty
+                                if (!cols || cols.length === 0) {
+                                    console.error('❌ No columns returned for', tableName, data.schema);
+                                    tableau.abortWithError(`Schema for ${tableName} contains no columns`);
+                                    return;
+                                }
+
                                 // Mỗi bảng là một table riêng biệt trong Tableau
+                                // QUAN TRỌNG: Tableau yêu cầu id chỉ chứa [a-zA-Z0-9_]
+                                // Thay dấu '.' bằng '_' trong id, nhưng giữ nguyên alias
                                 var tableSchema = {
-                                    "id": tableName,
-                                    "alias": `${tableName} (${database})`,
+                                    "id": String(tableName).replace(/\./g, '_'),  // SAMPLE.dbo.GIAODICH -> SAMPLE_dbo_GIAODICH
+                                    "alias": `${tableName} (${database})`,         // Hiển thị: SAMPLE.dbo.GIAODICH (SAMPLE)
                                     "columns": cols
                                 };
                                 
                                 allSchemas.push(tableSchema);
                                 processedCount++;
                                 
-                                console.log(`✅ Đã tạo schema cho bảng: ${tableName}`);
+                                console.log(`✅ Đã tạo schema cho bảng: ${tableName} (id: ${tableSchema.id})`);
                                 
                                 // Khi đã xử lý xong tất cả bảng
                                 if (processedCount === selectedTables.length) {
@@ -832,10 +764,29 @@ TABLEAU_WDC_TEMPLATE = '''
                 }
                 
                 // Tìm bảng nào đang được load dựa trên table.tableInfo.id
-                var currentTableName = table.tableInfo.id;
+                // LƯU Ý: id đã được replace '.' -> '_', cần map ngược lại
+                var tableId = table.tableInfo.id;  // VD: "SAMPLE_dbo_GIAODICH"
+                console.log(`🔄 Đang tải dữ liệu cho table id: ${tableId}`);
+                
+                // Tìm tên bảng gốc từ selectedTables
+                var currentTableName = null;
+                for (var i = 0; i < selectedTables.length; i++) {
+                    var originalName = selectedTables[i];
+                    var normalizedId = originalName.replace(/\./g, '_');
+                    if (normalizedId === tableId) {
+                        currentTableName = originalName;
+                        break;
+                    }
+                }
+                
+                if (!currentTableName) {
+                    tableau.abortWithError(`Không tìm thấy bảng với id: ${tableId}`);
+                    return;
+                }
+                
                 console.log(`🔄 Đang tải dữ liệu cho bảng: ${currentTableName}`);
                 
-                // API endpoint cho bảng hiện tại
+                // API endpoint cho bảng hiện tại (dùng tên gốc có dấu chấm)
                 var apiUrl = `/api/data/${currentTableName}?limit=${connectionData.limit}&order=${connectionData.order}`;
                 if (connectionData.database) {
                     apiUrl += `&database=${encodeURIComponent(connectionData.database)}`;
@@ -982,60 +933,98 @@ def list_tables():
             "tables": []
         })
 
-@app.route('/api/schema/<table_name>')
+@app.route('/api/schema/<path:table_name>')
 def get_table_schema(table_name):
     """
-    Lấy schema của bảng
+    Lấy schema của bảng - hỗ trợ format Database.Schema.Table
     """
     try:
-        database_name = request.args.get('database', None)
-        schema = tu_dong_phat_hien_schema(table_name, database_name)
-        if schema:
+        # Parse table_name để tách database (nếu có)
+        # Format có thể là: "Table", "Schema.Table", hoặc "Database.Schema.Table"
+        parts = table_name.split('.')
+        
+        if len(parts) == 3:
+            # Format: Database.Schema.Table
+            extracted_db = parts[0]
+            schema_table = f"{parts[1]}.{parts[2]}"  # Schema.Table
+            database_name = extracted_db
+            print(f"🔍 Parse format Database.Schema.Table: db='{extracted_db}', table='{schema_table}'")
+        elif len(parts) == 2:
+            # Format: Schema.Table (dùng database từ query param hoặc config)
+            schema_table = table_name  # Giữ nguyên Schema.Table
+            database_name = request.args.get('database', None)
+            print(f"🔍 Parse format Schema.Table: table='{schema_table}', database='{database_name}'")
+        else:
+            # Format: Table (chỉ có tên bảng)
+            schema_table = table_name
+            database_name = request.args.get('database', None)
+            print(f"🔍 Parse format Table: table='{schema_table}', database='{database_name}'")
+        
+        print(f"🔍 Đang lấy schema cho: table='{schema_table}', database='{database_name}'")
+        
+        schema = tu_dong_phat_hien_schema(schema_table, database_name)
+        if schema and schema.get('columns'):
+            print(f"✅ Tìm thấy {len(schema.get('columns', []))} cột cho bảng '{schema_table}'")
             return jsonify({
                 "success": True,
                 "schema": schema
             })
         else:
+            print(f"❌ Không tìm thấy schema cho bảng '{schema_table}'")
             return jsonify({
                 "success": False,
-                "error": "Không thể lấy schema"
+                "error": f"Không thể lấy schema cho bảng '{schema_table}'"
             })
     except Exception as e:
+        print(f"❌ Lỗi khi lấy schema: {e}")
         return jsonify({
             "success": False,
             "error": str(e)
         })
 
-@app.route('/api/data/<table_name>')
+@app.route('/api/data/<path:table_name>')
 def get_table_data(table_name):
     """
-    Lấy dữ liệu từ bảng
+    Lấy dữ liệu từ bảng - hỗ trợ format Database.Schema.Table
     """
     try:
         config = doc_cau_hinh_database()
-        database_name = request.args.get('database', None)
-        if database_name:
-            config['database'] = database_name
+        
+        # Parse table_name để tách database (nếu có)
+        parts = table_name.split('.')
+        
+        if len(parts) == 3:
+            # Format: Database.Schema.Table
+            extracted_db = parts[0]
+            schema_table = f"{parts[1]}.{parts[2]}"  # Schema.Table
+            database_name = extracted_db
+            print(f"🔍 Parse format Database.Schema.Table: db='{extracted_db}', table='{schema_table}'")
+        elif len(parts) == 2:
+            # Format: Schema.Table
+            schema_table = table_name
+            database_name = request.args.get('database', None)
+            print(f"🔍 Parse format Schema.Table: table='{schema_table}', database='{database_name}'")
+        else:
+            # Format: Table
+            schema_table = table_name
+            database_name = request.args.get('database', None)
+            print(f"🔍 Parse format Table: table='{schema_table}', database='{database_name}'")
+        
+        db_name = database_name if database_name else config['database']
             
-        limit = request.args.get('limit', '100')
+        limit = request.args.get('limit', '1000')
         order = request.args.get('order', 'auto')
         where_clause = request.args.get('where', '')
         
-        ket_noi = pymssql.connect(
-            server=config['server'],
-            port=config['port'],
-            user=config['user'],
-            password=config['password'],
-            database=config['database']
-        )
-        
-        con_tro = ket_noi.cursor()
+        print(f"🔄 Đang lấy dữ liệu: table='{schema_table}', database='{db_name}', limit={limit}")
         
         # Xây dựng câu truy vấn
         if limit == '0':
             limit_clause = ""
+            limit_int = 0
         else:
             limit_clause = f"TOP {limit}"
+            limit_int = int(limit)
         
         # Xử lý ORDER BY
         if order == 'random':
@@ -1051,45 +1040,26 @@ def get_table_data(table_name):
         else:
             where_sql = ""
         
-        query = f"SELECT {limit_clause} * FROM [{table_name}] {where_sql} {order_clause}"
+        query = f"SELECT {limit_clause} * FROM [{schema_table}] {where_sql} {order_clause}"
         
-        con_tro.execute(query)
-        ket_qua = con_tro.fetchall()
+        # Lay du lieu bang module moi
+        du_lieu_json, columns = db_conn.lay_du_lieu_bang(schema_table, db_name, limit_int)
         
-        # Lấy tên cột
-        schema = tu_dong_phat_hien_schema(table_name, database_name)
-        if schema:
-            columns = [col['column_name'] for col in schema['columns']]
-        else:
-            columns = [desc[0] for desc in con_tro.description]
-        
-        # Chuyển đổi dữ liệu
-        du_lieu_json = []
-        for dong in ket_qua:
-            dong_dict = {}
-            for i, gia_tri in enumerate(dong):
-                if isinstance(gia_tri, datetime):
-                    dong_dict[columns[i]] = gia_tri.isoformat()
-                elif gia_tri is None:
-                    dong_dict[columns[i]] = None
-                else:
-                    dong_dict[columns[i]] = gia_tri
-            du_lieu_json.append(dong_dict)
-        
-        ket_noi.close()
+        print(f"✅ Đã lấy {len(du_lieu_json)} dòng từ '{schema_table}'")
         
         return jsonify({
             "success": True,
             "data": du_lieu_json,
             "count": len(du_lieu_json),
-            "table": table_name,
-            "database": config['database'],
+            "table": schema_table,
+            "database": db_name,
             "query": query,
             "timestamp": datetime.now().isoformat(),
-            "message": f"Lấy dữ liệu từ bảng {table_name} thành công"
+            "message": f"Lấy dữ liệu từ bảng {schema_table} thành công"
         })
         
     except Exception as e:
+        print(f"❌ Lỗi khi lấy dữ liệu: {e}")
         return jsonify({
             "success": False,
             "error": str(e),

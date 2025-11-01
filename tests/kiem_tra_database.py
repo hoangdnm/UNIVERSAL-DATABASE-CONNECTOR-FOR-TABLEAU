@@ -5,10 +5,10 @@
 import pymssql
 
 try:
-    # Kết nối SQL Server
+    # Kết nối SQL Server (port 1433 - container hiện tại)
     conn = pymssql.connect(
         server='127.0.0.1',
-        port=1235,
+        port=1433,
         user='sa',
         password='YourStrong!Pass123',
         database='master'
