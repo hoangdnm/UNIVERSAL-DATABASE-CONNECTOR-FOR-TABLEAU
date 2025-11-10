@@ -1,0 +1,85 @@
+# Python# Python
+
+__pycache__/__pycache__/
+
+*.py[cod]*.py[cod]
+
+*$py.class*$py.class
+
+*.so*.so
+
+.Python.Python
+
+
+
+# Môi trường ảo (Virtual Environment)# Môi trường ảo (Virtual Environment)
+
+env/env/
+
+venv/venv/
+
+.venv/.venv/
+
+ENV/ENV/
+
+env.bak/env.bak/
+
+venv.bak/venv.bak/
+
+
+
+# IDE# IDE
+
+.vscode/.vscode/
+
+.idea/.idea/
+
+*.swp*.swp
+
+*.swo*.swo
+
+*~*~
+
+
+
+# Logs# Logs
+
+*.log*.log
+
+logs/logs/
+
+/tmp//tmp/
+
+
+
+# Database# Database
+
+*.db*.db
+
+*.sqlite*.sqlite
+
+*.sqlite3*.sqlite3
+
+
+
+# OS# OS
+
+.DS_Store.DS_Store
+
+Thumbs.dbThumbs.db
+
+desktop.inidesktop.ini
+
+
+
+# Project specific# Project specific
+
+connection_history.jsonconnection_history.json
+
+*.bak*.bak
+
+*.tmp*.tmp
+
+# bao mật
+.idea/
+.idea/
