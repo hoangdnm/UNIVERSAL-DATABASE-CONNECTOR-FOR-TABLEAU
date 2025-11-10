@@ -39,3 +39,6 @@ desktop.ini
 connection_history.json
 *.bak
 *.tmp
+# bao mật
+.idea/
+.idea/
